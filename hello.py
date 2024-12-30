@@ -7,13 +7,13 @@ import plotly.graph_objects as go
 
 # Set page config
 st.set_page_config(
-    page_title="YouTube Watching Time Tracker",
+    page_title="Dreaming Spanish Time Tracker",
     layout="wide"
 )
 
 # Data
 dates = ["2024/12/27", "2024/12/28", "2024/12/29"]
-minutes = [96, 91, 171]
+minutes = [96, 91, 177]
 
 # Create DataFrame
 df = pd.DataFrame({
@@ -49,7 +49,7 @@ def generate_future_predictions(df, avg_minutes_per_day, days_to_predict=800):
     return combined_df
 
 # Create main containers
-st.title("YouTube Watching Time Tracker")
+st.title("Dreaming Spanish Time Tracker")
 
 # Current stats
 col1, col2, col3 = st.columns(3)
