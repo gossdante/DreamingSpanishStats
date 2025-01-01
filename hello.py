@@ -12,8 +12,8 @@ st.set_page_config(
 )
 
 # Data
-dates = ["2024/12/27", "2024/12/28", "2024/12/29"]
-minutes = [96, 91, 177]
+dates = ["2024/12/27", "2024/12/28", "2024/12/29", "2024/12/30", "2024/12/31", "2025/01/01"]
+minutes = [96, 91, 177, 39, 4, 84]
 
 # Create DataFrame
 df = pd.DataFrame({
@@ -29,24 +29,27 @@ df['cumulative_hours'] = df['cumulative_minutes'] / 60
 avg_minutes_per_day = df['minutes'].mean()
 
 # Function to predict future values
+
+
 def generate_future_predictions(df, avg_minutes_per_day, days_to_predict=800):
     last_date = df['date'].iloc[-1]
-    future_dates = pd.date_range(start=last_date + timedelta(days=1), 
-                               periods=days_to_predict, 
-                               freq='D')
-    
+    future_dates = pd.date_range(start=last_date + timedelta(days=1),
+                                 periods=days_to_predict,
+                                 freq='D')
+
     future_minutes = [avg_minutes_per_day] * len(future_dates)
     future_df = pd.DataFrame({
         'date': future_dates,
         'minutes': future_minutes
     })
-    
+
     # Calculate cumulative values including historical data
     combined_df = pd.concat([df, future_df])
     combined_df['cumulative_minutes'] = combined_df['minutes'].cumsum()
     combined_df['cumulative_hours'] = combined_df['cumulative_minutes'] / 60
-    
+
     return combined_df
+
 
 # Create main containers
 st.title("Dreaming Spanish Time Tracker")
@@ -54,7 +57,8 @@ st.title("Dreaming Spanish Time Tracker")
 # Current stats
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Total Minutes Watched", f"{df['cumulative_minutes'].iloc[-1]:.0f}")
+    st.metric("Total Minutes Watched", f"{
+              df['cumulative_minutes'].iloc[-1]:.0f}")
 with col2:
     st.metric("Total Hours Watched", f"{df['cumulative_hours'].iloc[-1]:.1f}")
 with col3:
@@ -91,8 +95,9 @@ colors = ['red', 'orange', 'green', 'purple', 'brown', 'pink']
 for milestone, color in zip(milestones, colors):
     if milestone <= predicted_df['cumulative_hours'].max():
         # Find the date when milestone will be reached
-        milestone_date = predicted_df[predicted_df['cumulative_hours'] >= milestone]['date'].iloc[0]
-        
+        milestone_date = predicted_df[predicted_df['cumulative_hours']
+                                      >= milestone]['date'].iloc[0]
+
         # Add horizontal milestone line
         fig_prediction.add_shape(
             type="line",
@@ -102,7 +107,7 @@ for milestone, color in zip(milestones, colors):
             y1=milestone,
             line=dict(color=color, dash="dash", width=1)
         )
-        
+
         # Add milestone label
         fig_prediction.add_annotation(
             x=df['date'].min(),
@@ -113,7 +118,7 @@ for milestone, color in zip(milestones, colors):
             xanchor='right',
             font=dict(color=color)
         )
-        
+
         # Add date annotation
         fig_prediction.add_annotation(
             x=milestone_date,
@@ -137,7 +142,8 @@ fig_prediction.update_layout(
 )
 
 # Update axes ranges
-fig_prediction.update_yaxes(range=[0, min(predicted_df['cumulative_hours'].max() * 1.1, 1600)])
+fig_prediction.update_yaxes(
+    range=[0, min(predicted_df['cumulative_hours'].max() * 1.1, 1600)])
 
 st.plotly_chart(fig_prediction, use_container_width=True)
 
@@ -149,9 +155,12 @@ with col1:
     st.subheader("Expected Milestone Dates")
     for milestone in milestones:
         if current_hours < milestone:
-            days_to_milestone = ((milestone - current_hours) * 60) / avg_minutes_per_day
-            predicted_date = df['date'].iloc[-1] + timedelta(days=days_to_milestone)
-            st.write(f"📅 {milestone} hours: {predicted_date.strftime('%Y-%m-%d')} ({days_to_milestone:.0f} days)")
+            days_to_milestone = ((milestone - current_hours)
+                                 * 60) / avg_minutes_per_day
+            predicted_date = df['date'].iloc[-1] + \
+                timedelta(days=days_to_milestone)
+            st.write(f"📅 {milestone} hours: {predicted_date.strftime(
+                '%Y-%m-%d')} ({days_to_milestone:.0f} days)")
         else:
             st.write(f"✅ {milestone} hours: Already achieved!")
 
@@ -165,8 +174,8 @@ with col2:
 
 # Daily breakdown
 st.subheader("Daily Watching Time")
-daily_fig = px.bar(df, 
-                   x='date', 
+daily_fig = px.bar(df,
+                   x='date',
                    y='minutes',
                    title='Daily Minutes Watched',
                    labels={'minutes': 'Minutes', 'date': 'Date'})
@@ -177,15 +186,17 @@ st.subheader("Additional Insights")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.metric("Highest Daily Watch Time", 
+    st.metric("Highest Daily Watch Time",
               f"{df['minutes'].max()} minutes",
               f"on {df.loc[df['minutes'].idxmax(), 'date'].strftime('%Y-%m-%d')}")
 
 with col2:
     next_milestone = next(m for m in milestones if m > current_hours)
-    days_to_next = ((next_milestone - current_hours) * 60) / avg_minutes_per_day
-    st.metric(f"Days to {next_milestone} Hours", 
+    days_to_next = ((next_milestone - current_hours) * 60) / \
+        avg_minutes_per_day
+    st.metric(f"Days to {next_milestone} Hours",
               f"{days_to_next:.1f} days")
 
 # Add date range for context
-st.caption(f"Data range: {df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
+st.caption(f"Data range: {df['date'].min().strftime(
+    '%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
