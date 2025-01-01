@@ -12,8 +12,9 @@ st.set_page_config(
 )
 
 # Data
-dates = ["2024/12/27", "2024/12/28", "2024/12/29", "2024/12/30", "2024/12/31", "2025/01/01"]
 minutes = [96, 91, 177, 39, 4, 84]
+dates = pd.date_range(end=datetime.now().date(), periods=len(
+    minutes)).strftime('%Y/%m/%d').tolist()
 
 # Create DataFrame
 df = pd.DataFrame({
