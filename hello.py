@@ -269,24 +269,55 @@ with col2:
 
 # Additional insights
 st.subheader("Additional Insights")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric("Highest Daily Watch Time",
-              f"{df['minutes'].max()} minutes",
-              f"on {df.loc[df['minutes'].idxmax(), 'date'].strftime('%Y-%m-%d')}")
+    # Best day stats
+    best_day_idx = df['minutes'].idxmax()
+    best_day = df.loc[best_day_idx]
+    st.metric(
+        "Best Day",
+        f"{best_day['minutes']:.0f} min",
+        f"{best_day['date'].strftime('%a %b %d')}"
+    )
+    # Add consistency metric
+    days_watched = (df['minutes'] > 0).sum()
+    consistency = (days_watched / len(df)) * 100
+    st.metric("Consistency", f"{consistency:.1f}%",
+              f"{days_watched} of {len(df)} days")
 
 with col2:
-    next_milestone = next(m for m in milestones if m > current_hours)
-    days_to_next = ((next_milestone - current_hours) * 60) / \
-        avg_minutes_per_day
-    st.metric(f"Days to {next_milestone} Hours", f"{days_to_next:.1f} days")
+    # Streak information
+    st.metric("Current Streak", f"{current_streak} days")
+    avg_streak = streak_lengths.mean() if not streak_lengths.empty else 0
+    st.metric("Average Streak", f"{avg_streak:.1f} days",
+              f"Best: {longest_streak} days")
 
 with col3:
+    # Time comparisons
+    last_7_total = df.tail(7)['minutes'].sum()
+    previous_7_total = df.iloc[-14:-7]['minutes'].sum() if len(df) >= 14 else 0
+    week_change = last_7_total - previous_7_total
+    st.metric("Last 7 Days Total", f"{last_7_total:.0f} min",
+              f"{week_change:+.0f} min vs previous week")
+
     weekly_avg = df.tail(7)['minutes'].mean()
-    st.metric("Last 7 Days Average",
-              f"{weekly_avg:.1f} minutes",
-              f"{weekly_avg - avg_minutes_per_day:+.1f} vs overall average")
+    st.metric("7-Day Average", f"{weekly_avg:.1f} min/day",
+              f"{weekly_avg - avg_minutes_per_day:+.1f} vs overall")
+
+with col4:
+    # Achievement metrics
+    total_time = df['minutes'].sum()
+    milestone_count = sum(m <= df['cumulative_hours'].iloc[-1]
+                          for m in milestones)
+    st.metric("Total Time", f"{total_time:.0f} min",
+              f"{milestone_count} milestones reached")
+
+    daily_goal = 90  # Example daily goal
+    goal_hits = (df['minutes'] >= daily_goal).sum()
+    goal_rate = (goal_hits / len(df)) * 100
+    st.metric("Daily Goal Hits", f"{goal_hits} days",
+              f"{goal_rate:.1f}% of days")
 
 # Add date range for context
 st.caption(f"Data range: {df['date'].min().strftime(
