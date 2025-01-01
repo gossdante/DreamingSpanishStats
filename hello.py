@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # Data
-minutes = [96, 91, 177, 39, 4, 84]  # Your minutes list
+minutes = [96, 91, 177, 39, 4, 87]  # Your minutes list
 dates = pd.date_range(end=datetime.now().date(), periods=len(
     minutes)).strftime('%Y/%m/%d').tolist()
 
