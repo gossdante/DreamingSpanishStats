@@ -12,20 +12,21 @@ st.set_page_config(
 )
 
 # Data
-minutes = [96, 91, 177, 39, 4, 87]  # Your minutes list
+seconds = [5774, 5500, 10667, 2397, 296, 5278]  # Your seconds list
 dates = pd.date_range(end=datetime.now().date(), periods=len(
-    minutes)).strftime('%Y/%m/%d').tolist()
+    seconds)).strftime('%Y/%m/%d').tolist()
 
 # Create DataFrame
 df = pd.DataFrame({
     'date': pd.to_datetime(dates),
-    'minutes': minutes
+    'seconds': seconds
 })
 
-# Calculate cumulative minutes and streak
-df['cumulative_minutes'] = df['minutes'].cumsum()
+# Calculate cumulative seconds and streak
+df['cumulative_seconds'] = df['seconds'].cumsum()
+df['cumulative_minutes'] = df['cumulative_seconds'] / 60
 df['cumulative_hours'] = df['cumulative_minutes'] / 60
-df['streak'] = (df['minutes'] > 0).astype(int)
+df['streak'] = (df['seconds'] > 0).astype(int)
 
 # Calculate current streak
 df['streak_group'] = (df['streak'] != df['streak'].shift()).cumsum()
@@ -37,29 +38,30 @@ streak_lengths = df[df['streak'] == 1].groupby('streak_group').size()
 longest_streak = streak_lengths.max() if not streak_lengths.empty else 0
 
 # Calculate moving averages
-df['7day_avg'] = df['minutes'].rolling(7, min_periods=1).mean()
-df['30day_avg'] = df['minutes'].rolling(30, min_periods=1).mean()
+df['7day_avg'] = df['seconds'].rolling(7, min_periods=1).mean()
+df['30day_avg'] = df['seconds'].rolling(30, min_periods=1).mean()
 
-# Calculate average minutes per day
-avg_minutes_per_day = df['minutes'].mean()
+# Calculate average seconds per day
+avg_seconds_per_day = df['seconds'].mean()
 
 # Function to predict future values
 
 
-def generate_future_predictions(df, avg_minutes_per_day, days_to_predict=800):
+def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
     last_date = df['date'].iloc[-1]
     future_dates = pd.date_range(start=last_date + timedelta(days=1),
                                  periods=days_to_predict,
                                  freq='D')
 
-    future_minutes = [avg_minutes_per_day] * len(future_dates)
+    future_seconds = [avg_seconds_per_day] * len(future_dates)
     future_df = pd.DataFrame({
         'date': future_dates,
-        'minutes': future_minutes
+        'seconds': future_seconds
     })
 
     combined_df = pd.concat([df, future_df])
-    combined_df['cumulative_minutes'] = combined_df['minutes'].cumsum()
+    combined_df['cumulative_seconds'] = combined_df['seconds'].cumsum()
+    combined_df['cumulative_minutes'] = combined_df['cumulative_seconds'] / 60
     combined_df['cumulative_hours'] = combined_df['cumulative_minutes'] / 60
 
     return combined_df
@@ -73,14 +75,14 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Total Hours Watched", f"{df['cumulative_hours'].iloc[-1]:.1f}")
 with col2:
-    st.metric("Average Minutes/Day", f"{avg_minutes_per_day:.1f}")
+    st.metric("Average Minutes/Day", f"{(avg_seconds_per_day / 60):.1f}")
 with col3:
     st.metric("Current Streak", f"{current_streak} days")
 with col4:
     st.metric("Longest Streak", f"{longest_streak} days")
 
 # Generate future predictions
-predicted_df = generate_future_predictions(df, avg_minutes_per_day)
+predicted_df = generate_future_predictions(df, avg_seconds_per_day)
 
 # Create milestone prediction visualization
 fig_prediction = go.Figure()
@@ -182,9 +184,9 @@ with tab1:
     # Daily breakdown
     daily_fig = px.bar(df,
                        x='date',
-                       y='minutes',
+                       y=df['seconds'] / 60,  # Convert to minutes for display
                        title='Daily Minutes Watched',
-                       labels={'minutes': 'Minutes', 'date': 'Date'})
+                       labels={'value': 'Minutes', 'date': 'Date'})
     st.plotly_chart(daily_fig, use_container_width=True)
 
 with tab2:
@@ -193,7 +195,7 @@ with tab2:
 
     moving_avg_fig.add_trace(go.Scatter(
         x=df['date'],
-        y=df['minutes'],
+        y=df['seconds'] / 60,  # Convert to minutes
         name='Daily Minutes',
         mode='markers',
         marker=dict(size=6)
@@ -201,14 +203,14 @@ with tab2:
 
     moving_avg_fig.add_trace(go.Scatter(
         x=df['date'],
-        y=df['7day_avg'],
+        y=df['7day_avg'] / 60,  # Convert to minutes
         name='7-day Average',
         line=dict(color='orange')
     ))
 
     moving_avg_fig.add_trace(go.Scatter(
         x=df['date'],
-        y=df['30day_avg'],
+        y=df['30day_avg'] / 60,  # Convert to minutes
         name='30-day Average',
         line=dict(color='green')
     ))
@@ -231,10 +233,10 @@ with tab3:
         df,
         x='weekday',
         y='week',
-        z='minutes',
+        z=df['seconds'] / 60,  # Convert to minutes
         title='Weekly Viewing Pattern',
-        labels={'weekday': 'Day of Week', 'week': 'Week Number',
-                'minutes': 'Minutes Watched'},
+        labels={'value': 'Minutes Watched',
+                'weekday': 'Day of Week', 'week': 'Week Number'},
         category_orders={'weekday': [
             'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
     )
@@ -251,7 +253,7 @@ with col1:
     for milestone in milestones:
         if current_hours < milestone:
             days_to_milestone = ((milestone - current_hours)
-                                 * 60) / avg_minutes_per_day
+                                 * 3600) / avg_seconds_per_day
             predicted_date = df['date'].iloc[-1] + \
                 timedelta(days=days_to_milestone)
             st.write(f"📅 {milestone} hours: {predicted_date.strftime(
@@ -273,15 +275,15 @@ col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     # Best day stats
-    best_day_idx = df['minutes'].idxmax()
+    best_day_idx = df['seconds'].idxmax()
     best_day = df.loc[best_day_idx]
     st.metric(
         "Best Day",
-        f"{best_day['minutes']:.0f} min",
+        f"{(best_day['seconds'] / 60):.0f} min",
         f"{best_day['date'].strftime('%a %b %d')}"
     )
     # Add consistency metric
-    days_watched = (df['minutes'] > 0).sum()
+    days_watched = (df['seconds'] > 0).sum()
     consistency = (days_watched / len(df)) * 100
     st.metric("Consistency", f"{consistency:.1f}%",
               f"{days_watched} of {len(df)} days")
@@ -295,26 +297,26 @@ with col2:
 
 with col3:
     # Time comparisons
-    last_7_total = df.tail(7)['minutes'].sum()
-    previous_7_total = df.iloc[-14:-7]['minutes'].sum() if len(df) >= 14 else 0
+    last_7_total = df.tail(7)['seconds'].sum()
+    previous_7_total = df.iloc[-14:-7]['seconds'].sum() if len(df) >= 14 else 0
     week_change = last_7_total - previous_7_total
-    st.metric("Last 7 Days Total", f"{last_7_total:.0f} min",
-              f"{week_change:+.0f} min vs previous week")
+    st.metric("Last 7 Days Total", f"{(last_7_total / 60):.0f} min",
+              f"{(week_change / 60):+.0f} min vs previous week")
 
-    weekly_avg = df.tail(7)['minutes'].mean()
-    st.metric("7-Day Average", f"{weekly_avg:.1f} min/day",
-              f"{weekly_avg - avg_minutes_per_day:+.1f} vs overall")
+    weekly_avg = df.tail(7)['seconds'].mean()
+    st.metric("7-Day Average", f"{(weekly_avg / 60):.1f} min/day",
+              f"{((weekly_avg - avg_seconds_per_day) / 60):+.1f} vs overall")
 
 with col4:
     # Achievement metrics
-    total_time = df['minutes'].sum()
+    total_time = df['seconds'].sum()
     milestone_count = sum(m <= df['cumulative_hours'].iloc[-1]
                           for m in milestones)
-    st.metric("Total Time", f"{total_time:.0f} min",
+    st.metric("Total Time", f"{(total_time / 60):.0f} min",
               f"{milestone_count} milestones reached")
 
-    daily_goal = 90  # Example daily goal
-    goal_hits = (df['minutes'] >= daily_goal).sum()
+    daily_goal = 5400  # Example daily goal in seconds (90 minutes)
+    goal_hits = (df['seconds'] >= daily_goal).sum()
     goal_rate = (goal_hits / len(df)) * 100
     st.metric("Daily Goal Hits", f"{goal_hits} days",
               f"{goal_rate:.1f}% of days")
