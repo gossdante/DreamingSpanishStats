@@ -4,6 +4,26 @@ import numpy as np
 from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
+import json
+
+# Function to fetch data from Dreaming Spanish API
+
+
+def fetch_ds_data(token):
+    url = "https://www.dreamingspanish.com/.netlify/functions/dayWatchedTime"
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        st.error(f"Error fetching data: {str(e)}")
+        return None
+
 
 # Set page config
 st.set_page_config(
@@ -11,12 +31,28 @@ st.set_page_config(
     layout="wide"
 )
 
-# Data
-seconds = [5774, 5500, 10667, 2397, 296, 5278]  # Your seconds list
-dates = pd.date_range(end=datetime.now().date(), periods=len(
-    seconds)).strftime('%Y/%m/%d').tolist()
+# Add token input field
+token = st.text_input("Enter your bearer token:", type="password")
 
-# Create DataFrame
+if not token:
+    st.warning("Please enter your bearer token to fetch data")
+    st.stop()
+
+# Fetch API data
+api_data = fetch_ds_data(token)
+if not api_data:
+    st.error("Failed to fetch data")
+    st.stop()
+
+# Convert API data to DataFrame
+df = pd.DataFrame(api_data)
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date')
+
+# Create DataFrame with seconds data
+seconds = df['timeSeconds'].tolist()
+dates = df['date'].dt.strftime('%Y/%m/%d').tolist()
+
 df = pd.DataFrame({
     'date': pd.to_datetime(dates),
     'seconds': seconds
