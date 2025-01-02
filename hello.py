@@ -44,10 +44,27 @@ if not api_data:
     st.error("Failed to fetch data")
     st.stop()
 
-# Convert API data to DataFrame
+# Convert API data to DataFrame - modify this section
 df = pd.DataFrame(api_data)
 df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values('date')
+
+# Add goal tracking metrics
+total_days = len(df)
+goals_reached = df['goalReached'].sum()
+goal_streak = (df['goalReached'] == True).astype(int)
+
+# Calculate current goal streak
+df['goal_streak_group'] = (goal_streak != goal_streak.shift()).cumsum()
+df['current_goal_streak'] = df.groupby('goal_streak_group')[
+    'goalReached'].cumsum()
+current_goal_streak = df['current_goal_streak'].iloc[-1] if df['goalReached'].iloc[-1] else 0
+
+# Calculate longest goal streak
+goal_streak_lengths = df[df['goalReached'] ==
+                         True].groupby('goal_streak_group').size()
+longest_goal_streak = goal_streak_lengths.max(
+) if not goal_streak_lengths.empty else 0
 
 # Create DataFrame with seconds data
 seconds = df['timeSeconds'].tolist()
@@ -351,11 +368,12 @@ with col4:
     st.metric("Total Time", f"{(total_time / 60):.0f} min",
               f"{milestone_count} milestones reached")
 
-    daily_goal = 5400  # Example daily goal in seconds (90 minutes)
-    goal_hits = (df['seconds'] >= daily_goal).sum()
-    goal_rate = (goal_hits / len(df)) * 100
-    st.metric("Daily Goal Hits", f"{goal_hits} days",
+    goal_rate = (goals_reached / total_days) * 100
+    st.metric("Goal Achievement", f"{goals_reached} days",
               f"{goal_rate:.1f}% of days")
+
+    st.metric("Goal Streak", f"{current_goal_streak} days",
+              f"Best: {longest_goal_streak} days")
 
 # Add date range for context
 st.caption(f"Data range: {df['date'].min().strftime(
