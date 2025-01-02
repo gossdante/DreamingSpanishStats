@@ -25,46 +25,71 @@ def fetch_ds_data(token):
         return None
 
 
+def load_data(token):
+    """Fetch and process data from API"""
+    api_data = fetch_ds_data(token)
+    if not api_data:
+        return None
+
+    # Convert API data to DataFrame
+    df = pd.DataFrame(api_data)
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+
+    # Add goal tracking metrics
+    total_days = len(df)
+    goals_reached = df['goalReached'].sum()
+    goal_streak = (df['goalReached'] == True).astype(int)
+
+    # Calculate current goal streak
+    df['goal_streak_group'] = (goal_streak != goal_streak.shift()).cumsum()
+    df['current_goal_streak'] = df.groupby('goal_streak_group')[
+        'goalReached'].cumsum()
+    current_goal_streak = df['current_goal_streak'].iloc[-1] if df['goalReached'].iloc[-1] else 0
+
+    # Calculate longest goal streak
+    goal_streak_lengths = df[df['goalReached'] ==
+                             True].groupby('goal_streak_group').size()
+    longest_goal_streak = goal_streak_lengths.max(
+    ) if not goal_streak_lengths.empty else 0
+
+    return df, goals_reached, total_days, current_goal_streak, longest_goal_streak
+
+
 # Set page config
 st.set_page_config(
     page_title="Dreaming Spanish Time Tracker",
     layout="wide"
 )
 
-# Add token input field
-token = st.text_input("Enter your bearer token:", type="password")
+# Create main containers
+st.title("Dreaming Spanish Time Tracker")
+st.subheader("Analyze your viewing habits and set goals")
+
+# Add token input and button in an aligned row
+st.write("")  # Add some spacing
+col1, col2 = st.columns([4, 1])
+with col1:
+    token = st.text_input("Enter your bearer token:", type="password",
+                          key="token_input", label_visibility="collapsed")
+with col2:
+    go_button = st.button("Go", type="primary", use_container_width=True)
 
 if not token:
     st.warning("Please enter your bearer token to fetch data")
     st.stop()
 
-# Fetch API data
-api_data = fetch_ds_data(token)
-if not api_data:
-    st.error("Failed to fetch data")
-    st.stop()
+# Load data when token is provided and button is clicked
+if 'data' not in st.session_state or go_button:
+    with st.spinner('Fetching data...'):
+        data = load_data(token)
+        if data is None:
+            st.error("Failed to fetch data")
+            st.stop()
+        st.session_state.data = data
 
-# Convert API data to DataFrame - modify this section
-df = pd.DataFrame(api_data)
-df['date'] = pd.to_datetime(df['date'])
-df = df.sort_values('date')
-
-# Add goal tracking metrics
-total_days = len(df)
-goals_reached = df['goalReached'].sum()
-goal_streak = (df['goalReached'] == True).astype(int)
-
-# Calculate current goal streak
-df['goal_streak_group'] = (goal_streak != goal_streak.shift()).cumsum()
-df['current_goal_streak'] = df.groupby('goal_streak_group')[
-    'goalReached'].cumsum()
-current_goal_streak = df['current_goal_streak'].iloc[-1] if df['goalReached'].iloc[-1] else 0
-
-# Calculate longest goal streak
-goal_streak_lengths = df[df['goalReached'] ==
-                         True].groupby('goal_streak_group').size()
-longest_goal_streak = goal_streak_lengths.max(
-) if not goal_streak_lengths.empty else 0
+# Unpack data from session state
+df, goals_reached, total_days, current_goal_streak, longest_goal_streak = st.session_state.data
 
 # Create DataFrame with seconds data
 seconds = df['timeSeconds'].tolist()
@@ -119,9 +144,6 @@ def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
 
     return combined_df
 
-
-# Create main containers
-st.title("Dreaming Spanish Time Tracker")
 
 # Current stats
 col1, col2, col3, col4 = st.columns(4)
