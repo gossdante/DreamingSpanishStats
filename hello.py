@@ -66,7 +66,7 @@ st.set_page_config(
 st.title("Dreaming Spanish Time Tracker")
 st.subheader("Analyze your viewing habits and set goals")
 
-# Add token input and button in an aligned row
+# Add token input and buttons in an aligned row
 st.write("")  # Add some spacing
 col1, col2 = st.columns([4, 1])
 with col1:
@@ -87,6 +87,16 @@ if 'data' not in st.session_state or go_button:
             st.error("Failed to fetch data")
             st.stop()
         st.session_state.data = data
+
+# Add export button after data is loaded
+if 'data' in st.session_state:
+    st.download_button(
+        label="📥 Export Data",
+        data=st.session_state.data[0].to_csv(index=False),
+        file_name="dreaming_spanish_data.csv",
+        mime="text/csv",
+    )
+    st.write("---")  # Add a separator
 
 # Unpack data from session state
 df, goals_reached, total_days, current_goal_streak, longest_goal_streak = st.session_state.data
