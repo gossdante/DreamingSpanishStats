@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
+from datetime import timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
-import json
 
 # Set pandas option for future compatibility
 pd.set_option('future.no_silent_downcasting', True)
