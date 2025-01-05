@@ -7,6 +7,9 @@ import plotly.graph_objects as go
 import requests
 import json
 
+# Set pandas option for future compatibility
+pd.set_option('future.no_silent_downcasting', True)
+
 # Function to fetch data from Dreaming Spanish API
 
 
@@ -34,6 +37,20 @@ def load_data(token):
     # Convert API data to DataFrame
     df = pd.DataFrame(api_data)
     df['date'] = pd.to_datetime(df['date'])
+
+    # Create a complete date range
+    date_range = pd.date_range(
+        start=df['date'].min(), end=df['date'].max(), freq='D')
+
+    # Reindex the DataFrame with the complete date range
+    df = df.set_index('date').reindex(date_range).reset_index()
+    df = df.rename(columns={'index': 'date'})
+
+    # Fill missing values with explicit types
+    df['timeSeconds'] = df['timeSeconds'].astype('float64').fillna(0.0)
+    df['goalReached'] = df['goalReached'].astype('boolean').fillna(False)
+
+    # Sort by date
     df = df.sort_values('date')
 
     # Add goal tracking metrics
