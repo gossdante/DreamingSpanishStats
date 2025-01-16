@@ -205,7 +205,7 @@ fig_prediction.add_trace(go.Scatter(
     x=df['date'],
     y=df['cumulative_hours'],
     name='Historical Data',
-    line=dict(color='blue'),
+    line=dict(color='#2E86C1'),  # Darker blue for better contrast
     mode='lines+markers'
 ))
 
@@ -214,13 +214,20 @@ fig_prediction.add_trace(go.Scatter(
     x=predicted_df['date'][len(df):],
     y=predicted_df['cumulative_hours'][len(df):],
     name='Predicted Growth',
-    line=dict(color='rgba(0, 0, 255, 0.3)', dash='dash'),
+    # Matching blue with opacity
+    line=dict(color='rgba(46, 134, 193, 0.4)', dash='dash'),
     mode='lines'
 ))
 
 # Add milestone lines and annotations
 milestones = [50, 150, 300, 600, 1000, 1500]
-colors = ['red', 'orange', 'green', 'purple', 'brown', 'pink']
+# High contrast colors that work well in both modes
+colors = ['#E74C3C',    # Strong red
+          '#F39C12',    # Amber
+          '#27AE60',    # Emerald green
+          '#8E44AD',    # Purple
+          '#D35400',    # Burnt orange
+          '#C0392B']    # Dark red
 
 for milestone, color in zip(milestones, colors):
     if milestone <= predicted_df['cumulative_hours'].max():
