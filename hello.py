@@ -28,8 +28,11 @@ def fetch_ds_data(token):
 
 def load_data(token):
     """Fetch and process data from API"""
+    if not token or not token.strip():
+        return None
+
     api_data = fetch_ds_data(token)
-    if not api_data:
+    if not api_data or not isinstance(api_data, list) or len(api_data) == 0:
         return None
 
     # Convert API data to DataFrame
@@ -116,8 +119,11 @@ if 'data' in st.session_state:
 # Unpack data from session state
 df, goals_reached, total_days, current_goal_streak, longest_goal_streak = st.session_state.data
 
-# Create DataFrame with seconds data
-seconds = df['timeSeconds'].tolist()
+# Just rename the column instead of recreating the DataFrame
+df = df.rename(columns={'timeSeconds': 'seconds'})
+
+# Calculate cumulative seconds and streak
+seconds = df['seconds'].tolist()
 dates = df['date'].dt.strftime('%Y/%m/%d').tolist()
 
 df = pd.DataFrame({
@@ -151,6 +157,12 @@ avg_seconds_per_day = df['seconds'].mean()
 
 
 def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
+    if len(df) == 0:
+        return pd.DataFrame()
+
+    if avg_seconds_per_day <= 0:
+        avg_seconds_per_day = 1  # Prevent division by zero
+
     last_date = df['date'].iloc[-1]
     future_dates = pd.date_range(start=last_date + timedelta(days=1),
                                  periods=days_to_predict,
@@ -253,10 +265,16 @@ y_axis_max = upcoming_milestones[2] if len(
     upcoming_milestones) >= 3 else milestones[-1]
 
 # Get the date for the third upcoming milestone (or last milestone if less than 3 remain)
-target_milestone = upcoming_milestones[2] if len(
-    upcoming_milestones) >= 3 else upcoming_milestones[-1]
-x_axis_max_date = predicted_df[predicted_df['cumulative_hours']
-                               >= target_milestone]['date'].iloc[0]
+if len(upcoming_milestones) > 0:
+    target_milestone = upcoming_milestones[min(2, len(upcoming_milestones)-1)]
+    milestone_data = predicted_df[predicted_df['cumulative_hours']
+                                  >= target_milestone]
+    if len(milestone_data) > 0:
+        x_axis_max_date = milestone_data['date'].iloc[0]
+    else:
+        x_axis_max_date = predicted_df['date'].max()
+else:
+    x_axis_max_date = predicted_df['date'].max()
 
 fig_prediction.update_layout(
     title='Projected Growth and Milestones',
