@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 import plotly.express as px
+import numpy as np
 import plotly.graph_objects as go
 import requests
 
@@ -296,7 +297,7 @@ st.plotly_chart(fig_prediction, use_container_width=True)
 
 # Create tabs for different visualizations
 tab1, tab2, tab3 = st.tabs(
-    ["Daily Breakdown", "Moving Averages", "Weekly Heatmap"])
+    ["Daily Breakdown", "Moving Averages", "Yearly Heatmap"])
 
 with tab1:
     # Daily breakdown
@@ -343,23 +344,77 @@ with tab2:
     st.plotly_chart(moving_avg_fig, use_container_width=True)
 
 with tab3:
-    # Weekly heatmap
-    df['weekday'] = df['date'].dt.day_name()
-    df['week'] = df['date'].dt.isocalendar().week
+    # Create a complete year date range
+    today = pd.Timestamp.now()
+    year_start = pd.Timestamp(today.year, 1, 1)
+    year_end = pd.Timestamp(today.year, 12, 31)
+    all_dates = pd.date_range(year_start, year_end, freq='D')
 
-    heatmap_fig = px.density_heatmap(
-        df,
-        x='weekday',
-        y='week',
-        z=df['seconds'] / 60,  # Convert to minutes
-        title='Weekly Viewing Pattern',
-        labels={'value': 'Minutes Watched',
-                'weekday': 'Day of Week', 'week': 'Week Number'},
-        category_orders={'weekday': [
-            'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+    # Create a DataFrame with all dates
+    full_year_df = pd.DataFrame({'date': all_dates})
+    full_year_df['seconds'] = 0
+
+    # Merge with actual data
+    full_year_df = full_year_df.merge(df[['date', 'seconds']],
+                                      on='date',
+                                      how='left')
+    full_year_df['seconds'] = full_year_df['seconds_y'].fillna(0)
+
+    # Calculate week and weekday using isocalendar
+    isocalendar_df = full_year_df['date'].dt.isocalendar()
+    full_year_df['weekday'] = isocalendar_df['day']
+
+    # Handle week numbers correctly
+    full_year_df['week'] = isocalendar_df['week']
+    # Adjust week numbers for consistency
+    mask = (full_year_df['date'].dt.month == 12) & (full_year_df['week'] <= 1)
+    full_year_df.loc[mask, 'week'] = full_year_df.loc[mask, 'week'] + 52
+    mask = (full_year_df['date'].dt.month == 1) & (full_year_df['week'] >= 52)
+    full_year_df.loc[mask, 'week'] = full_year_df.loc[mask, 'week'] - 52
+
+    # Rest of the heatmap code remains the same
+    heatmap_fig = go.Figure()
+
+    heatmap_fig.add_trace(go.Heatmap(
+        x=full_year_df['week'],
+        y=full_year_df['weekday'],
+        z=full_year_df['seconds'] / 60,  # Convert to minutes
+        colorscale=[
+            [0, 'rgb(247,244,227)'],     # Grey for zeros/future
+            [0.001, 'rgb(243,231,154)'],
+            [0.5, 'rgb(246,90,109)'],
+            [1, 'rgb(126,29,103)']
+        ],
+        showscale=True,
+        colorbar=dict(title='Minutes'),
+        hoverongaps=False,
+        hovertemplate='Date: %{customdata}<br>' +
+                      'Minutes: %{z:.1f}<extra></extra>',
+        customdata=full_year_df['date'].dt.strftime('%Y-%m-%d'),
+        xgap=3,  # Add 3 pixels gap between columns
+        ygap=3   # Add 3 pixels gap between rows
+    ))
+
+    # Update layout for GitHub-style appearance
+    heatmap_fig.update_layout(
+        title='Yearly Activity Heatmap',
+        xaxis_title='Week',
+        yaxis_title='Day of Week',
+        height=300,
+        yaxis=dict(
+            ticktext=['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            tickvals=[0, 1, 2, 3, 4, 5, 6, 7],
+            gridcolor='rgba(235, 235, 235, 1)',
+        ),
+        xaxis=dict(
+            gridcolor='rgba(235, 235, 235, 1)',
+            dtick=1,  # Show all week numbers
+            range=[0.5, 53.5],  # Fix the range to show all weeks
+        ),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
     )
 
-    heatmap_fig.update_layout(height=400)
     st.plotly_chart(heatmap_fig, use_container_width=True)
 
 # Text predictions
