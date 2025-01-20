@@ -34,3 +34,7 @@ To run it:
 4. Open the local link provided in your terminal
 
 If you use VS Code then you can also use the provided [Dev Container](https://containers.dev/).
+
+## License
+
+This software is licensed under the [GNU AGPL v3](https://choosealicense.com/licenses/agpl-3.0/), so please follow the license conditions if forking or modifying the project. Thanks!
