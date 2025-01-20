@@ -412,6 +412,7 @@ with tab3:
             ticktext=['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             tickvals=[0, 1, 2, 3, 4, 5, 6, 7],
             gridcolor='rgba(235, 235, 235, 1)',
+            autorange='reversed'  # This ensures Mon-Sun order
         ),
         xaxis=dict(
             gridcolor='rgba(235, 235, 235, 1)',
