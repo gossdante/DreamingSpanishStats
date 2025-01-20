@@ -83,7 +83,8 @@ st.set_page_config(
 
 # Create main containers
 st.title("Dreaming Spanish Time Tracker")
-st.subheader("Analyze your viewing habits and set goals")
+st.subheader("Analyze your viewing habits and predict your progress")
+
 
 # Add token input and buttons in an aligned row
 st.write("")  # Add some spacing
@@ -96,6 +97,14 @@ with col2:
 
 if not token:
     st.warning("Please enter your bearer token to fetch data")
+    # Load and display README
+    try:
+        with open('bearer_how_to.md', 'r') as file:
+            readme_content = file.read()
+            if readme_content:
+                st.markdown(readme_content, unsafe_allow_html=True)
+    except FileNotFoundError:
+        pass
     st.stop()
 
 # Load data when token is provided and button is clicked
