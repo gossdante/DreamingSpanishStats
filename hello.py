@@ -166,8 +166,9 @@ def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
         avg_seconds_per_day = 1  # Prevent division by zero
 
     last_date = df["date"].iloc[-1]
+    # Start future dates from the day after the last historical date
     future_dates = pd.date_range(
-        start=last_date, periods=days_to_predict, freq="D")
+        start=last_date + timedelta(days=1), periods=days_to_predict, freq="D")
 
     future_seconds = pd.Series([avg_seconds_per_day] * len(future_dates))
     future_df = pd.DataFrame({"date": future_dates, "seconds": future_seconds})
@@ -179,7 +180,17 @@ def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
     future_df["cumulative_minutes"] = future_df["cumulative_seconds"] / 60
     future_df["cumulative_hours"] = future_df["cumulative_minutes"] / 60
 
-    combined_df = pd.concat([df, future_df])
+    # Create a single row DataFrame for the last historical point
+    last_point = pd.DataFrame({
+        "date": [last_date],
+        "seconds": [df["seconds"].iloc[-1]],
+        "cumulative_seconds": [last_cumulative_seconds],
+        "cumulative_minutes": [last_cumulative_seconds / 60],
+        "cumulative_hours": [last_cumulative_seconds / 3600]
+    })
+
+    # Combine last historical point with future predictions
+    combined_df = pd.concat([last_point, future_df])
 
     return combined_df
 
@@ -230,8 +241,8 @@ with st.container(border=True):
     # Add predicted data - Overall Average
     fig_prediction.add_trace(
         go.Scatter(
-            x=predicted_df["date"][len(df):],
-            y=predicted_df["cumulative_hours"][len(df):],
+            x=predicted_df["date"],
+            y=predicted_df["cumulative_hours"],
             name="Predicted (Overall Avg)",
             line=dict(color="rgba(46, 134, 193, 0.4)", dash="dash"),
             mode="lines",
@@ -241,8 +252,8 @@ with st.container(border=True):
     # Add predicted data - 7-Day Average
     fig_prediction.add_trace(
         go.Scatter(
-            x=predicted_df_7day["date"][len(df):],
-            y=predicted_df_7day["cumulative_hours"][len(df):],
+            x=predicted_df_7day["date"],
+            y=predicted_df_7day["cumulative_hours"],
             name="Predicted (7-Day Avg)",
             line=dict(color="#FFA500", dash="dot"),
             mode="lines",
@@ -253,8 +264,8 @@ with st.container(border=True):
     # Add predicted data - 30-Day Average
     fig_prediction.add_trace(
         go.Scatter(
-            x=predicted_df_30day["date"][len(df):],
-            y=predicted_df_30day["cumulative_hours"][len(df):],
+            x=predicted_df_30day["date"],
+            y=predicted_df_30day["cumulative_hours"],
             name="Predicted (30-Day Avg)",
             line=dict(color="#2ECC71", dash="dot"),
             mode="lines",
