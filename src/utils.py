@@ -7,7 +7,7 @@ from datetime import timedelta
 from src.model import AnalysisResult
 
 
-def fetch_ds_data(token):
+def fetch_ds_data(token: str) -> dict | None:
     """
     Fetches data from the Dreaming Spanish API using the provided bearer token.
 
@@ -29,7 +29,7 @@ def fetch_ds_data(token):
         return None
 
 
-def load_data(token):
+def load_data(token: str) -> AnalysisResult | None:
     """
     Loads and processes data from the Dreaming Spanish API.
 
@@ -87,7 +87,7 @@ def load_data(token):
     return AnalysisResult(df=df, goals_reached=goals_reached, total_days=total_days, current_goal_streak=current_goal_streak, longest_goal_streak=longest_goal_streak)
 
 
-def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
+def generate_future_predictions(df: pd.DataFrame, avg_seconds_per_day: float, days_to_predict: int = 800):
     """
     Generates future predictions based on historical data and a given average seconds per day.
 
