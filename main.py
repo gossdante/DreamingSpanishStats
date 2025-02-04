@@ -12,10 +12,17 @@ pd.set_option("future.no_silent_downcasting", True)
 
 
 MILESTONES = [50, 150, 300, 600, 1000, 1500]
-COLOR_PALETTE = {
-    "primary": "#2E86C1",
-    "7day_avg": "#FFA500",
-    "30day_avg": "#2ECC71"
+COLOUR_PALETTE = {
+    "primary": "#2E86C1",      # Primary blue
+    "7day_avg": "#FFA500",     # Orange
+    "30day_avg": "#2ECC71",    # Green
+    # Milestone colors - using an accessible and distinguishable gradient
+    "50": "#FF6B6B",          # Coral red
+    "150": "#4ECDC4",         # Turquoise
+    "300": "#9B59B6",         # Purple
+    "600": "#F1C40F",         # Yellow
+    "1000": "#E67E22",        # Orange
+    "1500": "#2ECC71"         # Green
 }
 
 st.set_page_config(page_title="Dreaming Spanish Time Tracker", layout="wide")
@@ -132,7 +139,7 @@ with st.container(border=True):
             x=df["date"],
             y=df["cumulative_hours"],
             name="Historical Data",
-            line=dict(color="#2E86C1"),
+            line=dict(color=COLOUR_PALETTE["primary"]),
             mode="lines+markers",
         )
     )
@@ -143,8 +150,9 @@ with st.container(border=True):
             x=predicted_df["date"],
             y=predicted_df["cumulative_hours"],
             name="Predicted (Overall Avg)",
-            line=dict(color="rgba(46, 134, 193, 0.4)", dash="dash"),
+            line=dict(color=f"{COLOUR_PALETTE['primary']}", dash="dash"),
             mode="lines",
+            opacity=0.5,
         )
     )
 
@@ -154,7 +162,7 @@ with st.container(border=True):
             x=predicted_df_7day["date"],
             y=predicted_df_7day["cumulative_hours"],
             name="Predicted (7-Day Avg)",
-            line=dict(color="#FFA500", dash="dot"),
+            line=dict(color=COLOUR_PALETTE["7day_avg"], dash="dot"),
             mode="lines",
             opacity=0.5,
         )
@@ -166,14 +174,14 @@ with st.container(border=True):
             x=predicted_df_30day["date"],
             y=predicted_df_30day["cumulative_hours"],
             name="Predicted (30-Day Avg)",
-            line=dict(color="#2ECC71", dash="dot"),
+            line=dict(color=COLOUR_PALETTE["30day_avg"], dash="dot"),
             mode="lines",
             opacity=0.5,
         )
     )
 
     for milestone in MILESTONES:
-        color = COLOR_PALETTE.get(str(milestone), "#E74C3C")
+        color = COLOUR_PALETTE[str(milestone)]
         if milestone <= predicted_df["cumulative_hours"].max():
             milestone_date = predicted_df[
                 predicted_df["cumulative_hours"] >= milestone
@@ -290,7 +298,7 @@ with st.container(border=True):
                 x=df["date"],
                 y=df["7day_avg"] / 60,  # Convert to minutes
                 name="7-day Average",
-                line=dict(color="orange"),
+                line=dict(color=COLOUR_PALETTE["7day_avg"]),
             )
         )
 
@@ -299,7 +307,7 @@ with st.container(border=True):
                 x=df["date"],
                 y=df["30day_avg"] / 60,  # Convert to minutes
                 name="30-day Average",
-                line=dict(color="green"),
+                line=dict(color=COLOUR_PALETTE["30day_avg"]),
             )
         )
 
