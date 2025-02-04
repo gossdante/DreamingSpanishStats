@@ -1,4 +1,5 @@
 from datetime import timedelta
+from dataclasses import dataclass
 
 import pandas as pd
 import plotly.express as px
@@ -8,6 +9,23 @@ import streamlit as st
 
 # Set pandas option for future compatibility
 pd.set_option("future.no_silent_downcasting", True)
+
+
+@dataclass
+class AnalysisResult:
+    df: pd.DataFrame
+    goals_reached: int
+    total_days: int
+    current_goal_streak: int
+    longest_goal_streak: int
+
+
+MILESTONES = [50, 150, 300, 600, 1000, 1500]
+COLOR_PALETTE = {
+    "primary": "#2E86C1",
+    "7day_avg": "#FFA500",
+    "30day_avg": "#2ECC71"
+}
 
 # Function to fetch data from Dreaming Spanish API
 
@@ -39,16 +57,12 @@ def load_data(token):
     df["date"] = pd.to_datetime(df["date"])
 
     # Create a complete date range
-    date_range = pd.date_range(
-        start=df["date"].min(), end=df["date"].max(), freq="D")
-
-    # Reindex the DataFrame with the complete date range
-    df = df.set_index("date").reindex(date_range).reset_index()
+    df = df.set_index("date").asfreq("D").reset_index()
     df = df.rename(columns={"index": "date"})
 
     # Fill missing values with explicit types
-    df["timeSeconds"] = df["timeSeconds"].astype("float64").fillna(0.0)
-    df["goalReached"] = df["goalReached"].astype("boolean").fillna(False)
+    df = df.astype({"timeSeconds": "float64", "goalReached": "boolean"}) \
+        .fillna({"timeSeconds": 0.0, "goalReached": False})
 
     # Sort by date
     df = df.sort_values("date")
@@ -56,10 +70,9 @@ def load_data(token):
     # Add goal tracking metrics
     total_days = len(df)
     goals_reached = df["goalReached"].sum()
-    goal_streak = (df["goalReached"] == True).astype(int)
 
     # Calculate current goal streak
-    df["goal_streak_group"] = (goal_streak != goal_streak.shift()).cumsum()
+    df["goal_streak_group"] = (~df["goalReached"]).cumsum()
     df["current_goal_streak"] = df.groupby("goal_streak_group")[
         "goalReached"].cumsum()
     current_goal_streak = (
@@ -73,7 +86,7 @@ def load_data(token):
         goal_streak_lengths.max() if not goal_streak_lengths.empty else 0
     )
 
-    return df, goals_reached, total_days, current_goal_streak, longest_goal_streak
+    return AnalysisResult(df=df, goals_reached=goals_reached, total_days=total_days, current_goal_streak=current_goal_streak, longest_goal_streak=longest_goal_streak)
 
 
 # Set page config
@@ -119,10 +132,12 @@ if "data" not in st.session_state or go_button:
         st.session_state.data = data
 
 
-# Unpack data from session state
-df, goals_reached, total_days, current_goal_streak, longest_goal_streak = (
-    st.session_state.data
-)
+result = st.session_state.data
+df = result.df
+goals_reached = result.goals_reached
+total_days = result.total_days
+current_goal_streak = result.current_goal_streak
+longest_goal_streak = result.longest_goal_streak
 
 # Just rename the column instead of recreating the DataFrame
 df = df.rename(columns={"timeSeconds": "seconds"})
@@ -190,7 +205,7 @@ def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
     })
 
     # Combine last historical point with future predictions
-    combined_df = pd.concat([last_point, future_df])
+    combined_df = pd.concat([last_point, future_df], ignore_index=True)
 
     return combined_df
 
@@ -284,8 +299,8 @@ with st.container(border=True):
         "#D35400",  # Burnt orange
         "#C0392B",
     ]  # Dark red
-
-    for milestone, color in zip(milestones, colors):
+    for milestone in MILESTONES:
+        color = COLOR_PALETTE.get(str(milestone), "#E74C3C")
         if milestone <= predicted_df["cumulative_hours"].max():
             milestone_date = predicted_df[
                 predicted_df["cumulative_hours"] >= milestone
@@ -609,9 +624,10 @@ with st.container(border=True):
 
 with st.container(border=True):
     st.subheader("Additional Tools")
+    result = st.session_state.data
     st.download_button(
         label="📥 Export Data to CSV",
-        data=st.session_state.data[0].to_csv(index=False),
+        data=result.df.to_csv(index=False),
         file_name="dreaming_spanish_data.csv",
         mime="text/csv",
     )
