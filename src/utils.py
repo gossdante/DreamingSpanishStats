@@ -1,3 +1,8 @@
+"""
+Provides utility functions for managing and analyzing viewing progress data.
+Includes methods for data processing, statistical insights, and forecasting future learning milestones
+"""
+
 import pandas as pd
 import streamlit as st
 import requests

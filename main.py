@@ -1,3 +1,15 @@
+"""
+A Streamlit dashboard application for tracking and visualizing Dreaming Spanish learning progress.
+
+This application provides an interactive interface to:
+- Load and display viewing data from the Dreaming Spanish API
+- Visualize viewing patterns
+- Track progress towards learning milestones (50, 150, 300, 600, 1000, 1500 hours)
+- Generate predictions for future milestone achievements
+- Display statistics like streaks, best days, and goal completion rates
+- Export viewing data to CSV format
+"""
+
 from datetime import timedelta
 
 import pandas as pd

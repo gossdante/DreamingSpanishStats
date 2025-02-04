@@ -1,3 +1,9 @@
+"""
+This module defines the data structures used to represent analysis results
+from the Dreaming Spanish viewing data, including metrics like goals reached,
+streaks, and the processed DataFrame containing all viewing statistics.
+"""
+
 from dataclasses import dataclass
 import pandas as pd
 
