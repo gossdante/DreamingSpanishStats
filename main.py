@@ -97,11 +97,7 @@ longest_streak = streak_lengths.max() if not streak_lengths.empty else 0
 df["7day_avg"] = df["seconds"].rolling(7, min_periods=1).mean()
 df["30day_avg"] = df["seconds"].rolling(30, min_periods=1).mean()
 
-# Calculate average seconds per day
 avg_seconds_per_day = df["seconds"].mean()
-
-# Function to predict future values
-
 
 with st.container(border=True):
     st.subheader("Basic Stats")
@@ -121,7 +117,6 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("Projected Growth")
 
-    # Generate future predictions
     predicted_df = generate_future_predictions(df, avg_seconds_per_day)
 
     # Calculate current moving averages for predictions
@@ -183,6 +178,7 @@ with st.container(border=True):
 
     # Add milestone lines and annotations
     milestones = [50, 150, 300, 600, 1000, 1500]
+
     # High contrast colors that work well in both modes
     colors = [
         "#E74C3C",  # Strong red

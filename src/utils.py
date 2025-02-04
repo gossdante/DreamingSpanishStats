@@ -8,6 +8,15 @@ from src.model import AnalysisResult
 
 
 def fetch_ds_data(token):
+    """
+    Fetches data from the Dreaming Spanish API using the provided bearer token.
+
+    Args:
+        token (str): The bearer token for API authentication.
+
+    Returns:
+        dict or None: A dictionary containing the fetched data if successful, otherwise None.
+    """
     url = "https://www.dreamingspanish.com/.netlify/functions/dayWatchedTime"
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -21,7 +30,19 @@ def fetch_ds_data(token):
 
 
 def load_data(token):
-    """Fetch and process data from API"""
+    """
+    Loads and processes data from the Dreaming Spanish API.
+
+    This function fetches data using the provided bearer token, converts the data into a DataFrame,
+    and processes it to include goal tracking metrics such as total days, goals reached, current goal streak,
+    and longest goal streak.
+
+    Args:
+        token (str): The bearer token for API authentication.
+
+    Returns:
+        AnalysisResult or None: An AnalysisResult object containing the processed data if successful, otherwise None.
+    """
     if not token or not token.strip():
         return None
 
@@ -67,6 +88,17 @@ def load_data(token):
 
 
 def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
+    """
+    Generates future predictions based on historical data and a given average seconds per day.
+
+    Args:
+        df (pd.DataFrame): The existing DataFrame containing historical data.
+        avg_seconds_per_day (float): The average seconds watched per day.
+        days_to_predict (int, optional): The number of future days to predict. Defaults to 800.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing future predictions with dates, seconds, cumulative seconds, cumulative minutes, and cumulative hours.
+    """
     if len(df) == 0:
         return pd.DataFrame()
 
