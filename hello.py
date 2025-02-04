@@ -174,20 +174,24 @@ def generate_future_predictions(df, avg_seconds_per_day, days_to_predict=800):
         avg_seconds_per_day = 1  # Prevent division by zero
 
     last_date = df['date'].iloc[-1]
-    future_dates = pd.date_range(start=last_date + timedelta(days=1),
+    future_dates = pd.date_range(start=last_date,
                                  periods=days_to_predict,
                                  freq='D')
 
-    future_seconds = [avg_seconds_per_day] * len(future_dates)
+    future_seconds = pd.Series([avg_seconds_per_day] * len(future_dates))
     future_df = pd.DataFrame({
         'date': future_dates,
         'seconds': future_seconds
     })
 
+    # Start cumulative seconds from the last cumulative seconds of the historical data
+    last_cumulative_seconds = df['cumulative_seconds'].iloc[-1]
+    future_df['cumulative_seconds'] = future_seconds.cumsum() + \
+        last_cumulative_seconds
+    future_df['cumulative_minutes'] = future_df['cumulative_seconds'] / 60
+    future_df['cumulative_hours'] = future_df['cumulative_minutes'] / 60
+
     combined_df = pd.concat([df, future_df])
-    combined_df['cumulative_seconds'] = combined_df['seconds'].cumsum()
-    combined_df['cumulative_minutes'] = combined_df['cumulative_seconds'] / 60
-    combined_df['cumulative_hours'] = combined_df['cumulative_minutes'] / 60
 
     return combined_df
 
@@ -206,6 +210,14 @@ with col4:
 # Generate future predictions
 predicted_df = generate_future_predictions(df, avg_seconds_per_day)
 
+# Calculate current moving averages for predictions
+current_7day_avg = df['7day_avg'].iloc[-1]
+current_30day_avg = df['30day_avg'].iloc[-1]
+
+# Generate predictions using different averages
+predicted_df_7day = generate_future_predictions(df, current_7day_avg)
+predicted_df_30day = generate_future_predictions(df, current_30day_avg)
+
 # Create milestone prediction visualization
 fig_prediction = go.Figure()
 
@@ -214,17 +226,34 @@ fig_prediction.add_trace(go.Scatter(
     x=df['date'],
     y=df['cumulative_hours'],
     name='Historical Data',
-    line=dict(color='#2E86C1'),  # Darker blue for better contrast
+    line=dict(color='#2E86C1'),
     mode='lines+markers'
 ))
 
-# Add predicted data
+# Add predicted data - Overall Average
 fig_prediction.add_trace(go.Scatter(
     x=predicted_df['date'][len(df):],
     y=predicted_df['cumulative_hours'][len(df):],
-    name='Predicted Growth',
-    # Matching blue with opacity
+    name='Predicted (Overall Avg)',
     line=dict(color='rgba(46, 134, 193, 0.4)', dash='dash'),
+    mode='lines'
+))
+
+# Add predicted data - 7-Day Average
+fig_prediction.add_trace(go.Scatter(
+    x=predicted_df_7day['date'][len(df):],
+    y=predicted_df_7day['cumulative_hours'][len(df):],
+    name='Predicted (7-Day Avg)',
+    line=dict(color='#FFA500', dash='dot'),
+    mode='lines'
+))
+
+# Add predicted data - 30-Day Average
+fig_prediction.add_trace(go.Scatter(
+    x=predicted_df_30day['date'][len(df):],
+    y=predicted_df_30day['cumulative_hours'][len(df):],
+    name='Predicted (30-Day Avg)',
+    line=dict(color='#2ECC71', dash='dot'),
     mode='lines'
 ))
 
