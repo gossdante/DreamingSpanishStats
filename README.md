@@ -30,7 +30,7 @@ To run it:
 
 1. Install `uv`
 2. Run `uv sync`
-3. Run `uv run -- streamlit hello.py`
+3. Run `uv run -- streamlit main.py`
 4. Open the local link provided in your terminal
 
 If you use VS Code then you can also use the provided [Dev Container](https://containers.dev/).
