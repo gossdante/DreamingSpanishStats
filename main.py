@@ -18,14 +18,10 @@ COLOR_PALETTE = {
     "30day_avg": "#2ECC71"
 }
 
-
-# Set page config
 st.set_page_config(page_title="Dreaming Spanish Time Tracker", layout="wide")
 
-# Create main containers
 st.title("Dreaming Spanish Time Tracker")
 st.subheader("Analyze your viewing habits and predict your progress")
-
 
 # Add token input and buttons in an aligned row
 st.write("")  # Add some spacing
@@ -176,18 +172,6 @@ with st.container(border=True):
         )
     )
 
-    # Add milestone lines and annotations
-    milestones = [50, 150, 300, 600, 1000, 1500]
-
-    # High contrast colors that work well in both modes
-    colors = [
-        "#E74C3C",  # Strong red
-        "#F39C12",  # Amber
-        "#27AE60",  # Emerald green
-        "#8E44AD",  # Purple
-        "#D35400",  # Burnt orange
-        "#C0392B",
-    ]  # Dark red
     for milestone in MILESTONES:
         color = COLOR_PALETTE.get(str(milestone), "#E74C3C")
         if milestone <= predicted_df["cumulative_hours"].max():
@@ -229,10 +213,10 @@ with st.container(border=True):
 
     # Find the next 3 upcoming milestones and their dates
     current_hours = df["cumulative_hours"].iloc[-1]
-    upcoming_milestones = [m for m in milestones if m > current_hours][:3]
+    upcoming_milestones = [m for m in MILESTONES if m > current_hours][:3]
     y_axis_max = (
         upcoming_milestones[2] if len(
-            upcoming_milestones) >= 3 else milestones[-1]
+            upcoming_milestones) >= 3 else MILESTONES[-1]
     )
 
     # Get the date for the third upcoming milestone (or last milestone if less than 3 remain)
@@ -414,7 +398,7 @@ with st.container(border=True):
 
     with col1:
         st.subheader("Expected Milestone Dates")
-        for milestone in milestones:
+        for milestone in MILESTONES:
             if current_hours < milestone:
                 days_to_milestone = (
                     (milestone - current_hours) * 3600
@@ -431,7 +415,7 @@ with st.container(border=True):
 
     with col2:
         st.subheader("Progress Overview")
-        for milestone in milestones:
+        for milestone in MILESTONES:
             if current_hours < milestone:
                 percentage = (current_hours / milestone) * 100
                 st.write(f"Progress to {milestone} hours: {percentage:.1f}%")
@@ -496,7 +480,7 @@ with st.container(border=True):
         # Achievement metrics
         total_time = df["seconds"].sum()
         milestone_count = sum(
-            m <= df["cumulative_hours"].iloc[-1] for m in milestones)
+            m <= df["cumulative_hours"].iloc[-1] for m in MILESTONES)
         st.metric(
             "Total Time",
             f"{(total_time / 60):.0f} min",
