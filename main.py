@@ -25,16 +25,16 @@ pd.set_option("future.no_silent_downcasting", True)
 
 MILESTONES = [50, 150, 300, 600, 1000, 1500]
 COLOUR_PALETTE = {
-    "primary": "#2E86C1",      # Primary blue
-    "7day_avg": "#FFA500",     # Orange
-    "30day_avg": "#2ECC71",    # Green
+    "primary": "#2E86C1",  # Primary blue
+    "7day_avg": "#FFA500",  # Orange
+    "30day_avg": "#2ECC71",  # Green
     # Milestone colors - using an accessible and distinguishable gradient
-    "50": "#FF6B6B",          # Coral red
-    "150": "#4ECDC4",         # Turquoise
-    "300": "#9B59B6",         # Purple
-    "600": "#F1C40F",         # Yellow
-    "1000": "#E67E22",        # Orange
-    "1500": "#2ECC71"         # Green
+    "50": "#FF6B6B",  # Coral red
+    "150": "#4ECDC4",  # Turquoise
+    "300": "#9B59B6",  # Purple
+    "600": "#F1C40F",  # Yellow
+    "1000": "#E67E22",  # Orange
+    "1500": "#2ECC71",  # Green
 }
 
 st.set_page_config(page_title="Dreaming Spanish Time Tracker", layout="wide")
@@ -120,8 +120,7 @@ with st.container(border=True):
     # Current stats
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Hours Watched", f"{
-                  df['cumulative_hours'].iloc[-1]:.1f}")
+        st.metric("Total Hours Watched", f"{df['cumulative_hours'].iloc[-1]:.1f}")
     with col2:
         st.metric("Average Minutes/Day", f"{(avg_seconds_per_day / 60):.1f}")
     with col3:
@@ -235,14 +234,12 @@ with st.container(border=True):
     current_hours = df["cumulative_hours"].iloc[-1]
     upcoming_milestones = [m for m in MILESTONES if m > current_hours][:3]
     y_axis_max = (
-        upcoming_milestones[2] if len(
-            upcoming_milestones) >= 3 else MILESTONES[-1]
+        upcoming_milestones[2] if len(upcoming_milestones) >= 3 else MILESTONES[-1]
     )
 
     # Get the date for the third upcoming milestone (or last milestone if less than 3 remain)
     if len(upcoming_milestones) > 0:
-        target_milestone = upcoming_milestones[min(
-            2, len(upcoming_milestones) - 1)]
+        target_milestone = upcoming_milestones[min(2, len(upcoming_milestones) - 1)]
         milestone_data = predicted_df[
             predicted_df["cumulative_hours"] >= target_milestone
         ]
@@ -277,8 +274,7 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("Additional Graphs")
     # Create tabs for different visualizations
-    tab1, tab2, tab3 = st.tabs(
-        ["Daily Breakdown", "Moving Averages", "Yearly Heatmap"])
+    tab1, tab2, tab3 = st.tabs(["Daily Breakdown", "Moving Averages", "Yearly Heatmap"])
 
     with tab1:
         # Daily breakdown
@@ -356,11 +352,9 @@ with st.container(border=True):
         # Handle week numbers correctly
         full_year_df["week"] = isocalendar_df["week"]
         # Adjust week numbers for consistency
-        mask = (full_year_df["date"].dt.month == 12) & (
-            full_year_df["week"] <= 1)
+        mask = (full_year_df["date"].dt.month == 12) & (full_year_df["week"] <= 1)
         full_year_df.loc[mask, "week"] = full_year_df.loc[mask, "week"] + 52
-        mask = (full_year_df["date"].dt.month == 1) & (
-            full_year_df["week"] >= 52)
+        mask = (full_year_df["date"].dt.month == 1) & (full_year_df["week"] >= 52)
         full_year_df.loc[mask, "week"] = full_year_df.loc[mask, "week"] - 52
 
         # Rest of the heatmap code remains the same
@@ -423,8 +417,7 @@ with st.container(border=True):
                 days_to_milestone = (
                     (milestone - current_hours) * 3600
                 ) / avg_seconds_per_day
-                predicted_date = df["date"].iloc[-1] + \
-                    timedelta(days=days_to_milestone)
+                predicted_date = df["date"].iloc[-1] + timedelta(days=days_to_milestone)
                 st.write(
                     f"📅 {milestone} hours: {predicted_date.strftime('%Y-%m-%d')} ({
                         days_to_milestone:.0f
@@ -458,8 +451,7 @@ with st.container(border=True):
         days_watched = (df["seconds"] > 0).sum()
         consistency = (days_watched / len(df)) * 100
         st.metric(
-            "Consistency", f"{consistency:.1f}%", f"{
-                days_watched} of {len(df)} days"
+            "Consistency", f"{consistency:.1f}%", f"{days_watched} of {len(df)} days"
         )
 
     with col2:
@@ -467,8 +459,7 @@ with st.container(border=True):
         st.metric("Current Streak", f"{current_streak} days")
         avg_streak = streak_lengths.mean() if not streak_lengths.empty else 0
         st.metric(
-            "Average Streak", f"{avg_streak:.1f} days", f"Best: {
-                longest_streak} days"
+            "Average Streak", f"{avg_streak:.1f} days", f"Best: {longest_streak} days"
         )
 
         st.metric(
@@ -480,8 +471,7 @@ with st.container(border=True):
     with col3:
         # Time comparisons
         last_7_total = df.tail(7)["seconds"].sum()
-        previous_7_total = df.iloc[-14:-
-                                   7]["seconds"].sum() if len(df) >= 14 else 0
+        previous_7_total = df.iloc[-14:-7]["seconds"].sum() if len(df) >= 14 else 0
         week_change = last_7_total - previous_7_total
         st.metric(
             "Last 7 Days Total",
@@ -499,8 +489,7 @@ with st.container(border=True):
     with col4:
         # Achievement metrics
         total_time = df["seconds"].sum()
-        milestone_count = sum(
-            m <= df["cumulative_hours"].iloc[-1] for m in MILESTONES)
+        milestone_count = sum(m <= df["cumulative_hours"].iloc[-1] for m in MILESTONES)
         st.metric(
             "Total Time",
             f"{(total_time / 60):.0f} min",
@@ -510,8 +499,7 @@ with st.container(border=True):
 
         goal_rate = (goals_reached / total_days) * 100
         st.metric(
-            "Goal Achievement", f"{goals_reached} days", f"{
-                goal_rate:.1f}% of days"
+            "Goal Achievement", f"{goals_reached} days", f"{goal_rate:.1f}% of days"
         )
 
 

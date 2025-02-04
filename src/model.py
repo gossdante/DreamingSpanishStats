@@ -5,6 +5,7 @@ streaks, and the processed DataFrame containing all viewing statistics.
 """
 
 from dataclasses import dataclass
+
 import pandas as pd
 
 
@@ -20,6 +21,7 @@ class AnalysisResult:
         current_goal_streak (int): The current streak of consecutive days with goals reached.
         longest_goal_streak (int): The longest streak of consecutive days with goals reached.
     """
+
     df: pd.DataFrame
     goals_reached: int
     total_days: int
