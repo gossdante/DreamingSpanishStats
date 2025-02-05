@@ -258,14 +258,11 @@ with st.container(border=True):
         height=600,
         margin=dict(l=20, r=20, t=10, b=0),
         yaxis=dict(
-            range=[0, y_axis_max * 1.35]  # Increase vertical padding to 35%
+            autorange=True,
+            range=[0, y_axis_max * 1.35],  # Increase vertical padding to 35%
         ),
         xaxis=dict(
-            # Add 15 days padding to start and end dates
-            range=[
-                df["date"].min() - timedelta(days=15),
-                x_axis_max_date + timedelta(days=15),
-            ]
+            autorange=True,
         ),
     )
 
