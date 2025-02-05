@@ -366,7 +366,7 @@ with st.container(border=True):
                 y=full_year_df["weekday"],
                 z=full_year_df["seconds"] / 60,  # Convert to minutes
                 colorscale=[
-                    [0, "rgb(247,244,227)"],  # Grey for zeros/future
+                    [0, "rgba(227,224,227,.5)"],  # Grey for zeros/future
                     [0.001, "rgb(243,231,154)"],
                     [0.5, "rgb(246,90,109)"],
                     [1, "rgb(126,29,103)"],
@@ -391,11 +391,11 @@ with st.container(border=True):
             yaxis=dict(
                 ticktext=["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
                 tickvals=[0, 1, 2, 3, 4, 5, 6, 7],
-                gridcolor="rgba(235, 235, 235, 1)",
+                showgrid=False,
                 autorange="reversed",  # This ensures Mon-Sun order
             ),
             xaxis=dict(
-                gridcolor="rgba(235, 235, 235, 1)",
+                showgrid=False,
                 dtick=1,  # Show all week numbers
                 range=[0.5, 53.5],  # Fix the range to show all weeks
             ),
