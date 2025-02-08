@@ -329,6 +329,9 @@ with st.container(border=True):
             height=400,
         )
 
+        moving_avg_fig.update_yaxes(
+            dtick=15, title="Minutes Watched", ticklabelstep=2)
+
         st.plotly_chart(moving_avg_fig, use_container_width=True)
 
     with tab3:
