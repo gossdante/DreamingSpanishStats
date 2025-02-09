@@ -132,15 +132,23 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("Projected Growth")
 
-    predicted_df = generate_future_predictions(df, avg_seconds_per_day)
+    # Calculate target milestone
+    current_hours = df["cumulative_hours"].iloc[-1]
+    upcoming_milestones = [m for m in MILESTONES if m > current_hours][:3]
+    target_milestone = upcoming_milestones[2] if len(
+        upcoming_milestones) >= 3 else MILESTONES[-1]
 
     # Calculate current moving averages for predictions
     current_7day_avg = df["7day_avg"].iloc[-1]
     current_30day_avg = df["30day_avg"].iloc[-1]
 
-    # Generate predictions using different averages
-    predicted_df_7day = generate_future_predictions(df, current_7day_avg)
-    predicted_df_30day = generate_future_predictions(df, current_30day_avg)
+    # Generate predictions up to target milestone
+    predicted_df = generate_future_predictions(
+        df, avg_seconds_per_day, target_milestone)
+    predicted_df_7day = generate_future_predictions(
+        df, current_7day_avg, target_milestone)
+    predicted_df_30day = generate_future_predictions(
+        df, current_30day_avg, target_milestone)
 
     # Create milestone prediction visualization
     fig_prediction = go.Figure()
@@ -262,7 +270,6 @@ with st.container(border=True):
         margin=dict(l=20, r=20, t=10, b=0),
         yaxis=dict(
             autorange=True,
-            range=[0, y_axis_max * 1.35],  # Increase vertical padding to 35%
         ),
         xaxis=dict(
             autorange=True,
