@@ -77,13 +77,15 @@ def load_data(token: str) -> AnalysisResult | None:
 
     # Calculate current goal streak
     df["goal_streak_group"] = (~df["goalReached"]).cumsum()
-    df["current_goal_streak"] = df.groupby("goal_streak_group")["goalReached"].cumsum()
+    df["current_goal_streak"] = df.groupby("goal_streak_group")[
+        "goalReached"].cumsum()
     current_goal_streak = (
         df["current_goal_streak"].iloc[-1] if df["goalReached"].iloc[-1] else 0
     )
 
     # Calculate longest goal streak
-    goal_streak_lengths = df[df["goalReached"]].groupby("goal_streak_group").size()
+    goal_streak_lengths = df[df["goalReached"]
+                             ].groupby("goal_streak_group").size()
     longest_goal_streak = (
         goal_streak_lengths.max() if not goal_streak_lengths.empty else 0
     )
@@ -98,15 +100,16 @@ def load_data(token: str) -> AnalysisResult | None:
 
 
 def generate_future_predictions(
-    df: pd.DataFrame, avg_seconds_per_day: float, days_to_predict: int = 800
+    df: pd.DataFrame, avg_seconds_per_day: float, target_hours: float
 ):
     """
-    Generates future predictions based on historical data and a given average seconds per day.
+    Generates future predictions based on historical data and a given average seconds per day,
+    stopping when the target hours are reached.
 
     Args:
         df (pd.DataFrame): The existing DataFrame containing historical data.
         avg_seconds_per_day (float): The average seconds watched per day.
-        days_to_predict (int, optional): The number of future days to predict. Defaults to 800.
+        target_hours (float): The target number of hours to predict up to.
 
     Returns:
         pd.DataFrame: A DataFrame containing future predictions with dates, seconds, cumulative seconds, cumulative minutes, and cumulative hours.
@@ -118,19 +121,29 @@ def generate_future_predictions(
         avg_seconds_per_day = 1  # Prevent division by zero
 
     last_date = df["date"].iloc[-1]
-    # Start future dates from the day after the last historical date
+    last_cumulative_seconds = df["cumulative_seconds"].iloc[-1]
+    current_hours = last_cumulative_seconds / 3600
+
+    # Calculate how many days needed to reach target
+    hours_remaining = target_hours - current_hours
+    days_needed = int((hours_remaining * 3600 / avg_seconds_per_day) + 1)
+
+    # Generate enough days to reach target
     future_dates = pd.date_range(
-        start=last_date + timedelta(days=1), periods=days_to_predict, freq="D"
+        start=last_date + timedelta(days=1), periods=days_needed, freq="D"
     )
 
     future_seconds = pd.Series([avg_seconds_per_day] * len(future_dates))
     future_df = pd.DataFrame({"date": future_dates, "seconds": future_seconds})
 
-    # Start cumulative seconds from the last cumulative seconds of the historical data
-    last_cumulative_seconds = df["cumulative_seconds"].iloc[-1]
-    future_df["cumulative_seconds"] = future_seconds.cumsum() + last_cumulative_seconds
+    # Calculate cumulative values
+    future_df["cumulative_seconds"] = future_seconds.cumsum() + \
+        last_cumulative_seconds
     future_df["cumulative_minutes"] = future_df["cumulative_seconds"] / 60
     future_df["cumulative_hours"] = future_df["cumulative_minutes"] / 60
+
+    # Only keep predictions up to slightly above target hours
+    future_df = future_df[future_df["cumulative_hours"] <= target_hours * 1.05]
 
     # Create a single row DataFrame for the last historical point
     last_point = pd.DataFrame(

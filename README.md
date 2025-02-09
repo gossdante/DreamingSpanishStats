@@ -14,11 +14,11 @@
 
 > Last updated: Janaury 2025
 
-![Dashboard showing the predicted growth](https://github.com/user-attachments/assets/ad14439f-3063-4c1f-a4a1-6c115b6ccb81)
+![Dashboard showing the predicted growth](https://github.com/user-attachments/assets/e1ef9cfa-0f91-4ca3-8b6b-2e8cd88ea5ad)
 
-![GitHub style heatmap and milestone dates](https://github.com/user-attachments/assets/d5ad5a18-f90e-425c-bc5b-c1cc7a47d4d6)
+![GitHub style heatmap and milestone dates](https://github.com/user-attachments/assets/3c6cc919-59ec-46d7-9d84-b7afce3d48f3)
 
-![Additional Stats](https://github.com/user-attachments/assets/48db93e3-08ea-4920-b52a-4a32e6d4d3e4)
+![Additional Stats](https://github.com/user-attachments/assets/4b85442f-0b74-4650-acb7-1de3713700b5)
 
 ## How to run the app locally
 
