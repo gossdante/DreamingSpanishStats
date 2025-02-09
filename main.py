@@ -108,7 +108,7 @@ dates = df["date"].dt.strftime("%Y/%m/%d").tolist()
 df = pd.DataFrame({"date": pd.to_datetime(dates), "seconds": seconds})
 
 # Calculate cumulative seconds and streak
-df["cumulative_seconds"] = df["seconds"].cumsum()
+df["cumulative_seconds"] = df["seconds"].cumsum() + (50 * 60 * 60)
 df["cumulative_minutes"] = df["cumulative_seconds"] / 60
 df["cumulative_hours"] = df["cumulative_minutes"] / 60
 df["streak"] = (df["seconds"] > 0).astype(int)
@@ -449,10 +449,9 @@ with st.container(border=True):
                 predicted_date = df["date"].iloc[-1] + \
                     timedelta(days=days_to_milestone)
                 st.write(
-                    f"📅 {milestone} hours: {predicted_date.strftime('%Y-%m-%d')} ({
-                        days_to_milestone:.0f
-                    } days)"
-                )
+                f"📅 {milestone} hours: {predicted_date.strftime('%Y-%m-%d')} "
+                f"({days_to_milestone:.0f} days)"
+            )
             else:
                 st.write(f"✅ {milestone} hours: Already achieved!")
 
@@ -547,7 +546,7 @@ with st.container(border=True):
 
 # Add date range for context
 st.caption(
-    f"Data range: {df['date'].min().strftime('%Y-%m-%d')} to {
-        df['date'].max().strftime('%Y-%m-%d')
-    }"
+    f"Data range: {df['date'].min().strftime('%Y-%m-%d')} to "
+    f"{df['date'].max().strftime('%Y-%m-%d')}"
 )
+
