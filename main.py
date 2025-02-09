@@ -41,6 +41,7 @@ st.set_page_config(page_title="Dreaming Spanish Time Tracker", layout="wide")
 
 st.title("Dreaming Spanish Time Tracker")
 st.subheader("Analyze your viewing habits and predict your progress")
+st.info("This tool is new and may contain bugs and slight statistical errors for the time being. Please report any issues on the GitHub repository. Thank you!")
 
 button_col1, button_col2, button_col3 = st.columns([1, 1, 1])
 with button_col1:
@@ -85,7 +86,7 @@ if "data" not in st.session_state or go_button:
     with st.spinner("Fetching data..."):
         data = load_data(token)
         if data is None:
-            st.error("Failed to fetch data")
+            st.error("Failed to fetch data from the DreamingSpnaish API. Please check your bearer token, ensuring it doesn't contain anything extra such as 'token:' at the beginning.")
             st.stop()
         st.session_state.data = data
 
