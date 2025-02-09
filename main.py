@@ -16,6 +16,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from dotenv import load_dotenv
+import os
 
 from src.utils import generate_future_predictions, load_data
 
@@ -68,6 +70,10 @@ with col1:
     )
 with col2:
     go_button = st.button("Go", type="primary", use_container_width=True)
+
+load_dotenv()
+token = os.getenv("BEARER_TOKEN")
+# Check if token is provided
 
 if not token:
     st.warning("Please enter your bearer token above to fetch data")
