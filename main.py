@@ -42,6 +42,19 @@ st.set_page_config(page_title="Dreaming Spanish Time Tracker", layout="wide")
 st.title("Dreaming Spanish Time Tracker")
 st.subheader("Analyze your viewing habits and predict your progress")
 
+button_col1, button_col2, button_col3 = st.columns([1, 1, 1])
+with button_col1:
+    st.link_button("☁️ Official Progress",
+                   "https://www.dreamingspanish.com/progress", use_container_width=True)
+
+with button_col2:
+    st.link_button(
+        "🪲 Report Issue", "http://github.com/HarryPeach/dreamingspanishstats/issues", use_container_width=True)
+
+with button_col3:
+    st.link_button(
+        "📖 Source Code", "http://github.com/HarryPeach/dreamingspanishstats", use_container_width=True)
+
 # Add token input and buttons in an aligned row
 st.write("")  # Add some spacing
 col1, col2 = st.columns([4, 1])
@@ -56,7 +69,7 @@ with col2:
     go_button = st.button("Go", type="primary", use_container_width=True)
 
 if not token:
-    st.warning("Please enter your bearer token to fetch data")
+    st.warning("Please enter your bearer token above to fetch data")
     # Load and display README
     try:
         with open("bearer_how_to.md", "r") as file:
