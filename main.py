@@ -315,6 +315,9 @@ with st.container(border=True):
         # Moving averages visualization
         moving_avg_fig = go.Figure()
 
+        # Calculate cumulative average (running mean)
+        df["cumulative_avg"] = df["seconds"].expanding().mean()
+
         moving_avg_fig.add_trace(
             go.Scatter(
                 x=df["date"],
@@ -340,6 +343,15 @@ with st.container(border=True):
                 y=df["30day_avg"] / 60,  # Convert to minutes
                 name="30-day Average",
                 line=dict(color=COLOUR_PALETTE["30day_avg"]),
+            )
+        )
+
+        moving_avg_fig.add_trace(
+            go.Scatter(
+                x=df["date"],
+                y=df["cumulative_avg"] / 60,
+                name="Overall Average",
+                line=dict(color=COLOUR_PALETTE["primary"], dash="dash"),
             )
         )
 
