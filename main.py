@@ -453,20 +453,52 @@ with st.container(border=True):
 
     with col1:
         st.subheader("Expected Milestone Dates")
+
+        header_cols = st.columns([2, 3, 3, 3])
+        with header_cols[0]:
+            st.write("**Milestone**")
+        with header_cols[1]:
+            st.write("**Overall avg**")
+        with header_cols[2]:
+            st.write("**7-day avg**")
+        with header_cols[3]:
+            st.write("**30-day avg**")
+
         for milestone in MILESTONES:
             if current_hours < milestone:
                 days_to_milestone = (
-                    (milestone - current_hours) * 3600
-                ) / avg_seconds_per_day
+                    (milestone - current_hours) * 3600) / avg_seconds_per_day
+                days_to_milestone_7day = ((milestone - current_hours) * 3600) / \
+                    current_7day_avg if current_7day_avg > 0 else float('inf')
+                days_to_milestone_30day = ((milestone - current_hours) * 3600) / \
+                    current_30day_avg if current_30day_avg > 0 else float(
+                        'inf')
+
                 predicted_date = df["date"].iloc[-1] + \
                     timedelta(days=days_to_milestone)
-                st.write(
-                    f"📅 {milestone} hours: {predicted_date.strftime('%Y-%m-%d')} ({
-                        days_to_milestone:.0f
-                    } days)"
-                )
+                predicted_date_7day = df["date"].iloc[-1] + \
+                    timedelta(days=days_to_milestone_7day)
+                predicted_date_30day = df["date"].iloc[-1] + \
+                    timedelta(days=days_to_milestone_30day)
+
+                cols = st.columns([2, 3, 3, 3])
+                with cols[0]:
+                    st.write(f"🗓️ {milestone}h")
+                with cols[1]:
+                    st.write(
+                        f"{predicted_date.strftime('%Y-%m-%d')} ({days_to_milestone:.0f}d)")
+                with cols[2]:
+                    st.write(
+                        f"{predicted_date_7day.strftime('%Y-%m-%d')} ({days_to_milestone_7day:.0f}d)")
+                with cols[3]:
+                    st.write(
+                        f"{predicted_date_30day.strftime('%Y-%m-%d')} ({days_to_milestone_30day:.0f}d)")
             else:
-                st.write(f"✅ {milestone} hours: Already achieved!")
+                cols = st.columns([2, 9])
+                with cols[0]:
+                    st.write(f"🗓️ {milestone}h")
+                with cols[1]:
+                    st.write("✅ Already achieved!")
 
     with col2:
         st.subheader("Progress Overview")
