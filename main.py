@@ -150,6 +150,20 @@ with st.container(border=True):
         st.metric("Longest Streak", f"{longest_streak} days")
 
 with st.container(border=True):
+    st.subheader("Averages")
+
+    # Total, 30 Day, and 7 Day averages
+    col6, col7, col8 = st.columns(3)
+    with col6:
+        st.metric("Total Average", f"{(avg_seconds_per_day / 60):.1f} min/day")
+    with col7:
+        st.metric("30-Day Average",
+                  f"{(df['30day_avg'].iloc[-1] / 60):.1f} min/day")
+    with col8:
+        st.metric("7-Day Average",
+                  f"{(df['7day_avg'].iloc[-1] / 60):.1f} min/day")
+
+with st.container(border=True):
     st.subheader("Projected Growth")
 
     # Calculate target milestone
