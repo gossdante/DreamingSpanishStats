@@ -147,7 +147,14 @@ with st.container(border=True):
     # Current stats
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Hours Watched", f"{df['cumulative_hours'].iloc[-1]:.1f}")
+        if initial_time > 0:
+            st.metric(
+                "Total Hours Watched",
+                f"{df['cumulative_hours'].iloc[-1]:.1f}",
+                f"including {initial_time / 60:.0f} min initial time",
+            )
+        else:
+            st.metric("Total Hours Watched", f"{df['cumulative_hours'].iloc[-1]:.1f}")
     with col2:
         st.metric("Average Minutes/Day", f"{(avg_seconds_per_day / 60):.1f}")
     with col3:
