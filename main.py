@@ -17,7 +17,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.utils import generate_future_predictions, load_data
+from src.utils import generate_future_predictions, get_initial_time, load_data
 
 # Set pandas option for future compatibility
 pd.set_option("future.no_silent_downcasting", True)
@@ -103,9 +103,9 @@ if "data" not in st.session_state or go_button:
             st.stop()
         st.session_state.data = data
 
-
 result = st.session_state.data
 df = result.df
+initial_time = get_initial_time(token) or 0
 goals_reached = result.goals_reached
 total_days = result.total_days
 current_goal_streak = result.current_goal_streak
@@ -121,7 +121,7 @@ dates = df["date"].dt.strftime("%Y/%m/%d").tolist()
 df = pd.DataFrame({"date": pd.to_datetime(dates), "seconds": seconds})
 
 # Calculate cumulative seconds and streak
-df["cumulative_seconds"] = df["seconds"].cumsum()
+df["cumulative_seconds"] = df["seconds"].cumsum() + initial_time
 df["cumulative_minutes"] = df["cumulative_seconds"] / 60
 df["cumulative_hours"] = df["cumulative_minutes"] / 60
 df["streak"] = (df["seconds"] > 0).astype(int)
