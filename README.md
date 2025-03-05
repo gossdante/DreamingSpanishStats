@@ -35,6 +35,10 @@ To run it:
 
 If you use VS Code then you can also use the provided [Dev Container](https://containers.dev/).
 
+## Contributing
+
+To contribute some changes, fork from the `dev` branch (the most recent) and make a pull request!
+
 ## License
 
 This software is licensed under the [GNU AGPL v3](https://choosealicense.com/licenses/agpl-3.0/), so please follow the license conditions if forking or modifying the project. Thanks!
