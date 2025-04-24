@@ -34,6 +34,31 @@ def fetch_ds_data(token: str) -> dict | None:
         return None
 
 
+def get_initial_time(token: str) -> int | None:
+    """
+    Fetches the initial time watched from the Dreaming Spanish API using the provided bearer token.
+
+    This function uses the API call to fetch the "external times", this includes the time watched before the user started Dreaming Spanish. Which is acquired in the users onboarding.
+
+    Args:
+        token (str): The bearer token for API authentication.
+
+    Returns:
+        int or None: The initial time watched (in seconds) if successful, otherwise None.
+    """
+    url = "https://www.dreamingspanish.com/.netlify/functions/externalTime"
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        return response.json()["externalTimes"][0]["timeSeconds"]
+    except Exception as e:
+        st.error(f"Error fetching initial time: {str(e)}")
+        return None
+
+
 def load_data(token: str) -> AnalysisResult | None:
     """
     Loads and processes data from the Dreaming Spanish API.
@@ -77,15 +102,13 @@ def load_data(token: str) -> AnalysisResult | None:
 
     # Calculate current goal streak
     df["goal_streak_group"] = (~df["goalReached"]).cumsum()
-    df["current_goal_streak"] = df.groupby("goal_streak_group")[
-        "goalReached"].cumsum()
+    df["current_goal_streak"] = df.groupby("goal_streak_group")["goalReached"].cumsum()
     current_goal_streak = (
         df["current_goal_streak"].iloc[-1] if df["goalReached"].iloc[-1] else 0
     )
 
     # Calculate longest goal streak
-    goal_streak_lengths = df[df["goalReached"]
-                             ].groupby("goal_streak_group").size()
+    goal_streak_lengths = df[df["goalReached"]].groupby("goal_streak_group").size()
     longest_goal_streak = (
         goal_streak_lengths.max() if not goal_streak_lengths.empty else 0
     )
@@ -137,8 +160,7 @@ def generate_future_predictions(
     future_df = pd.DataFrame({"date": future_dates, "seconds": future_seconds})
 
     # Calculate cumulative values
-    future_df["cumulative_seconds"] = future_seconds.cumsum() + \
-        last_cumulative_seconds
+    future_df["cumulative_seconds"] = future_seconds.cumsum() + last_cumulative_seconds
     future_df["cumulative_minutes"] = future_df["cumulative_seconds"] / 60
     future_df["cumulative_hours"] = future_df["cumulative_minutes"] / 60
 

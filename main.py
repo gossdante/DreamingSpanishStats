@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 import os
 
 from src.utils import generate_future_predictions, get_initial_time, load_data
+from src.utils import generate_future_predictions, get_initial_time, load_data
 
 # Set pandas option for future compatibility
 pd.set_option("future.no_silent_downcasting", True)
@@ -43,20 +44,31 @@ st.set_page_config(page_title="Dreaming Spanish Time Tracker", layout="wide")
 
 st.title("Dreaming Spanish Time Tracker")
 st.subheader("Analyze your viewing habits and predict your progress")
-st.info("This tool is new and may contain bugs and slight statistical errors for the time being. Please report any issues on the GitHub repository. Thank you!")
+st.info(
+    "This tool is new and may contain bugs and slight statistical errors for the time being. Please report any issues on the GitHub repository. Thank you!"
+)
 
 button_col1, button_col2, button_col3 = st.columns([1, 1, 1])
 with button_col1:
-    st.link_button("☁️ Official Progress",
-                   "https://www.dreamingspanish.com/progress", use_container_width=True)
+    st.link_button(
+        "☁️ Official Progress",
+        "https://www.dreamingspanish.com/progress",
+        use_container_width=True,
+    )
 
 with button_col2:
     st.link_button(
-        "🪲 Report Issue", "http://github.com/HarryPeach/dreamingspanishstats/issues", use_container_width=True)
+        "🪲 Report Issue",
+        "http://github.com/HarryPeach/dreamingspanishstats/issues",
+        use_container_width=True,
+    )
 
 with button_col3:
     st.link_button(
-        "📖 Source Code", "http://github.com/HarryPeach/dreamingspanishstats", use_container_width=True)
+        "📖 Source Code",
+        "http://github.com/HarryPeach/dreamingspanishstats",
+        use_container_width=True,
+    )
 
 # Add token input and buttons in an aligned row
 st.write("")  # Add some spacing
@@ -92,13 +104,15 @@ if "data" not in st.session_state or go_button:
     with st.spinner("Fetching data..."):
         data = load_data(token)
         if data is None:
-            st.error("Failed to fetch data from the DreamingSpnaish API. Please check your bearer token, ensuring it doesn't contain anything extra such as 'token:' at the beginning.")
+            st.error(
+                "Failed to fetch data from the DreamingSpnaish API. Please check your bearer token, ensuring it doesn't contain anything extra such as 'token:' at the beginning."
+            )
             st.stop()
         st.session_state.data = data
 
-
 result = st.session_state.data
 df = result.df
+initial_time = get_initial_time(token) or 0
 initial_time = get_initial_time(token) or 0
 goals_reached = result.goals_reached
 total_days = result.total_days
@@ -176,8 +190,9 @@ with st.container(border=True):
     # Calculate target milestone
     current_hours = df["cumulative_hours"].iloc[-1]
     upcoming_milestones = [m for m in MILESTONES if m > current_hours][:3]
-    target_milestone = upcoming_milestones[2] if len(
-        upcoming_milestones) >= 3 else MILESTONES[-1]
+    target_milestone = (
+        upcoming_milestones[2] if len(upcoming_milestones) >= 3 else MILESTONES[-1]
+    )
 
     # Calculate current moving averages for predictions
     current_7day_avg = df["7day_avg"].iloc[-1]
@@ -185,11 +200,14 @@ with st.container(border=True):
 
     # Generate predictions up to target milestone
     predicted_df = generate_future_predictions(
-        df, avg_seconds_per_day, target_milestone)
+        df, avg_seconds_per_day, target_milestone
+    )
     predicted_df_7day = generate_future_predictions(
-        df, current_7day_avg, target_milestone)
+        df, current_7day_avg, target_milestone
+    )
     predicted_df_30day = generate_future_predictions(
-        df, current_30day_avg, target_milestone)
+        df, current_30day_avg, target_milestone
+    )
 
     # Create milestone prediction visualization
     fig_prediction = go.Figure()
@@ -243,55 +261,57 @@ with st.container(border=True):
 
     for milestone in MILESTONES:
         color = COLOUR_PALETTE[str(milestone)]
-        if milestone <= predicted_df["cumulative_hours"].max():
+        if milestone <= df["cumulative_hours"].max():
+            milestone_date = df[df["cumulative_hours"] >= milestone]["date"].iloc[0]
+        elif milestone <= predicted_df["cumulative_hours"].max():
             milestone_date = predicted_df[
                 predicted_df["cumulative_hours"] >= milestone
             ]["date"].iloc[0]
+        else:
+            continue
 
-            fig_prediction.add_shape(
-                type="line",
-                x0=df["date"].min(),
-                x1=milestone_date,
-                y0=milestone,
-                y1=milestone,
-                line=dict(color=color, dash="dash", width=1),
-            )
+        fig_prediction.add_shape(
+            type="line",
+            x0=df["date"].min(),
+            x1=milestone_date,
+            y0=milestone,
+            y1=milestone,
+            line=dict(color=color, dash="dash", width=1),
+        )
 
-            fig_prediction.add_annotation(
-                x=df["date"].min(),
-                y=milestone,
-                text=f"{milestone} Hours",
-                showarrow=False,
-                xshift=-5,
-                xanchor="right",
-                font=dict(color=color),
-            )
+        fig_prediction.add_annotation(
+            x=df["date"].min(),
+            y=milestone,
+            text=f"{milestone} Hours",
+            showarrow=False,
+            xshift=-5,
+            xanchor="right",
+            font=dict(color=color),
+        )
 
-            fig_prediction.add_annotation(
-                x=milestone_date,
-                y=milestone,
-                text=milestone_date.strftime("%Y-%m-%d"),
-                showarrow=True,
-                arrowhead=2,
-                arrowsize=1,
-                arrowcolor=color,
-                font=dict(color=color, size=10),
-                xanchor="left",
-                yanchor="bottom",
-            )
+        fig_prediction.add_annotation(
+            x=milestone_date,
+            y=milestone,
+            text=milestone_date.strftime("%Y-%m-%d"),
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowcolor=color,
+            font=dict(color=color, size=10),
+            xanchor="left",
+            yanchor="bottom",
+        )
 
     # Find the next 3 upcoming milestones and their dates
     current_hours = df["cumulative_hours"].iloc[-1]
     upcoming_milestones = [m for m in MILESTONES if m > current_hours][:3]
     y_axis_max = (
-        upcoming_milestones[2] if len(
-            upcoming_milestones) >= 3 else MILESTONES[-1]
+        upcoming_milestones[2] if len(upcoming_milestones) >= 3 else MILESTONES[-1]
     )
 
     # Get the date for the third upcoming milestone (or last milestone if less than 3 remain)
     if len(upcoming_milestones) > 0:
-        target_milestone = upcoming_milestones[min(
-            2, len(upcoming_milestones) - 1)]
+        target_milestone = upcoming_milestones[min(2, len(upcoming_milestones) - 1)]
         milestone_data = predicted_df[
             predicted_df["cumulative_hours"] >= target_milestone
         ]
@@ -322,8 +342,7 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("Additional Graphs")
     # Create tabs for different visualizations
-    tab1, tab2, tab3 = st.tabs(
-        ["Daily Breakdown", "Moving Averages", "Yearly Heatmap"])
+    tab1, tab2, tab3 = st.tabs(["Daily Breakdown", "Moving Averages", "Yearly Heatmap"])
 
     with tab1:
         # Daily breakdown
@@ -334,13 +353,15 @@ with st.container(border=True):
             title="Daily Minutes Watched",
             labels={"value": "Minutes", "date": "Date"},
         )
-        daily_fig.update_yaxes(
-            dtick=15, title="Minutes Watched", ticklabelstep=2)
+        daily_fig.update_yaxes(dtick=15, title="Minutes Watched", ticklabelstep=2)
         st.plotly_chart(daily_fig, use_container_width=True)
 
     with tab2:
         # Moving averages visualization
         moving_avg_fig = go.Figure()
+
+        # Calculate cumulative average (running mean)
+        df["cumulative_avg"] = df["seconds"].expanding().mean()
 
         moving_avg_fig.add_trace(
             go.Scatter(
@@ -370,6 +391,15 @@ with st.container(border=True):
             )
         )
 
+        moving_avg_fig.add_trace(
+            go.Scatter(
+                x=df["date"],
+                y=df["cumulative_avg"] / 60,
+                name="Overall Average",
+                line=dict(color=COLOUR_PALETTE["primary"], dash="dash"),
+            )
+        )
+
         moving_avg_fig.update_layout(
             title="Daily Minutes with Moving Averages",
             xaxis_title="Date",
@@ -377,8 +407,7 @@ with st.container(border=True):
             height=400,
         )
 
-        moving_avg_fig.update_yaxes(
-            dtick=15, title="Minutes Watched", ticklabelstep=2)
+        moving_avg_fig.update_yaxes(dtick=15, title="Minutes Watched", ticklabelstep=2)
 
         st.plotly_chart(moving_avg_fig, use_container_width=True)
 
@@ -406,11 +435,9 @@ with st.container(border=True):
         # Handle week numbers correctly
         full_year_df["week"] = isocalendar_df["week"]
         # Adjust week numbers for consistency
-        mask = (full_year_df["date"].dt.month == 12) & (
-            full_year_df["week"] <= 1)
+        mask = (full_year_df["date"].dt.month == 12) & (full_year_df["week"] <= 1)
         full_year_df.loc[mask, "week"] = full_year_df.loc[mask, "week"] + 52
-        mask = (full_year_df["date"].dt.month == 1) & (
-            full_year_df["week"] >= 52)
+        mask = (full_year_df["date"].dt.month == 1) & (full_year_df["week"] >= 52)
         full_year_df.loc[mask, "week"] = full_year_df.loc[mask, "week"] - 52
 
         # Rest of the heatmap code remains the same
@@ -570,8 +597,7 @@ with st.container(border=True):
     with col3:
         # Time comparisons
         last_7_total = df.tail(7)["seconds"].sum()
-        previous_7_total = df.iloc[-14:-
-                                   7]["seconds"].sum() if len(df) >= 14 else 0
+        previous_7_total = df.iloc[-14:-7]["seconds"].sum() if len(df) >= 14 else 0
         week_change = last_7_total - previous_7_total
         st.metric(
             "Last 7 Days Total",
@@ -589,8 +615,7 @@ with st.container(border=True):
     with col4:
         # Achievement metrics
         total_time = df["seconds"].sum()
-        milestone_count = sum(
-            m <= df["cumulative_hours"].iloc[-1] for m in MILESTONES)
+        milestone_count = sum(m <= df["cumulative_hours"].iloc[-1] for m in MILESTONES)
         st.metric(
             "Total Time",
             f"{(total_time / 60):.0f} min",
